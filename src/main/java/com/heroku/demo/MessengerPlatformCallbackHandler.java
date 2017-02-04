@@ -172,6 +172,10 @@ public class MessengerPlatformCallbackHandler {
 					sendFileMessage(senderId);
 					break;
 
+				case "location":
+					sendLocation(senderId);
+					break;
+
 				case "order":
 					sendButtonMessage(senderId);
 					break;
@@ -286,6 +290,12 @@ public class MessengerPlatformCallbackHandler {
 				.addLocationQuickReply().toList().build();
 
 		this.sendClient.sendTextMessage(recipientId, "What are you in mood for ??", quickReplies);
+	}
+
+	private void sendLocation(String recipientId) throws MessengerApiException, MessengerIOException {
+		final List<QuickReply> quickReplies = QuickReply.newListBuilder().addLocationQuickReply().toList().build();
+
+		this.sendClient.sendTextMessage(recipientId, "Our Location", quickReplies);
 	}
 
 	private void sendReadReceipt(String recipientId) throws MessengerApiException, MessengerIOException {
