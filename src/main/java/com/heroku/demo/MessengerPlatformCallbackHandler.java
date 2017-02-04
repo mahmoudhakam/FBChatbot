@@ -214,7 +214,7 @@ public class MessengerPlatformCallbackHandler {
 	}
 
 	private void sendImageMessage(String recipientId) throws MessengerApiException, MessengerIOException {
-		this.sendClient.sendImageAttachment(recipientId, RESOURCE_URL + "/assets/menu.png");
+		this.sendClient.sendImageAttachment(recipientId, RESOURCE_URL + "/assets/menu.jpg");
 	}
 
 	private void sendGifMessage(String recipientId) throws MessengerApiException, MessengerIOException {
@@ -237,7 +237,7 @@ public class MessengerPlatformCallbackHandler {
 		final List<Button> buttons = Button.newListBuilder()
 				.addUrlButton("Open Web URL", "https://www.oculus.com/en-us/rift/").toList()
 				.addPostbackButton("Trigger Postback", "DEVELOPER_DEFINED_PAYLOAD").toList()
-				.addCallButton("Call Phone Number", "+0201008331586").toList().build();
+				.addCallButton("Call Phone Number", "+020109065701").toList().build();
 
 		final ButtonTemplate buttonTemplate = ButtonTemplate.newBuilder("Tap a button", buttons).build();
 		this.sendClient.sendTemplate(recipientId, buttonTemplate);
