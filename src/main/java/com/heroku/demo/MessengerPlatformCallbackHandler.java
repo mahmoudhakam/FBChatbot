@@ -152,7 +152,7 @@ public class MessengerPlatformCallbackHandler {
 
 			try {
 				switch (messageText.toLowerCase()) {
-				case "image":
+				case "menu":
 					sendImageMessage(senderId);
 					break;
 
@@ -172,19 +172,19 @@ public class MessengerPlatformCallbackHandler {
 					sendFileMessage(senderId);
 					break;
 
-				case "button":
+				case "order":
 					sendButtonMessage(senderId);
 					break;
 
-				case "generic":
+				case "template":
 					sendGenericMessage(senderId);
 					break;
 
-				case "receipt":
+				case "check receipt":
 					sendReceiptMessage(senderId);
 					break;
 
-				case "quick reply":
+				case "quick help":
 					sendQuickReply(senderId);
 					break;
 
@@ -214,7 +214,7 @@ public class MessengerPlatformCallbackHandler {
 	}
 
 	private void sendImageMessage(String recipientId) throws MessengerApiException, MessengerIOException {
-		this.sendClient.sendImageAttachment(recipientId, RESOURCE_URL + "/assets/rift.png");
+		this.sendClient.sendImageAttachment(recipientId, RESOURCE_URL + "/assets/menu.png");
 	}
 
 	private void sendGifMessage(String recipientId) throws MessengerApiException, MessengerIOException {
@@ -226,7 +226,7 @@ public class MessengerPlatformCallbackHandler {
 	}
 
 	private void sendVideoMessage(String recipientId) throws MessengerApiException, MessengerIOException {
-		this.sendClient.sendVideoAttachment(recipientId, RESOURCE_URL + "/assets/allofus480.mov");
+		this.sendClient.sendVideoAttachment(recipientId, RESOURCE_URL + "/assets/sample.mov");
 	}
 
 	private void sendFileMessage(String recipientId) throws MessengerApiException, MessengerIOException {
@@ -237,7 +237,7 @@ public class MessengerPlatformCallbackHandler {
 		final List<Button> buttons = Button.newListBuilder()
 				.addUrlButton("Open Web URL", "https://www.oculus.com/en-us/rift/").toList()
 				.addPostbackButton("Trigger Postback", "DEVELOPER_DEFINED_PAYLOAD").toList()
-				.addCallButton("Call Phone Number", "+16505551234").toList().build();
+				.addCallButton("Call Phone Number", "+0201008331586").toList().build();
 
 		final ButtonTemplate buttonTemplate = ButtonTemplate.newBuilder("Tap a button", buttons).build();
 		this.sendClient.sendTemplate(recipientId, buttonTemplate);
@@ -280,12 +280,12 @@ public class MessengerPlatformCallbackHandler {
 
 	private void sendQuickReply(String recipientId) throws MessengerApiException, MessengerIOException {
 		final List<QuickReply> quickReplies = QuickReply.newListBuilder()
-				.addTextQuickReply("Action", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_ACTION").toList()
-				.addTextQuickReply("Comedy", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_COMEDY").toList()
-				.addTextQuickReply("Drama", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_DRAMA").toList()
+				.addTextQuickReply("Checken", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_CHECKEN").toList()
+				.addTextQuickReply("Beef", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_BEEF").toList()
+				.addTextQuickReply("Fish", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_FISH").toList()
 				.addLocationQuickReply().toList().build();
 
-		this.sendClient.sendTextMessage(recipientId, "What's your favorite movie genre?", quickReplies);
+		this.sendClient.sendTextMessage(recipientId, "What are you in mood for ??", quickReplies);
 	}
 
 	private void sendReadReceipt(String recipientId) throws MessengerApiException, MessengerIOException {
@@ -459,7 +459,18 @@ public class MessengerPlatformCallbackHandler {
 			final NotificationType notificationType = NotificationType.REGULAR;
 			final String metadata = "DEVELOPER_DEFINED_METADATA";
 
-			this.sendClient.sendTextMessage(recipient, notificationType, text, metadata);
+			String help = "You can use of the following: order - template - check receipt - quick help - read receipt - menu";
+			String sent = "";
+
+			switch (text) {
+			case "help":
+				sent = help;
+				break;
+			default:
+				sent = "Please use the command 'help' to get the right commands";
+			}
+
+			this.sendClient.sendTextMessage(recipient, notificationType, sent, metadata);
 		} catch (MessengerApiException | MessengerIOException e) {
 			handleSendException(e);
 		}
