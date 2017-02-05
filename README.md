@@ -8,4 +8,4 @@ Build with spring-boot
 Please refer to the Spring Boot Heroku Guide
 
 # Push to heroku 
-Please put push.cmd file in the project then run it.
+Please put push.cmd file in the project then edit the commit comment then run it.
