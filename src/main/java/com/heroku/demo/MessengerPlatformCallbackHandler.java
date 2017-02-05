@@ -84,7 +84,7 @@ public class MessengerPlatformCallbackHandler {
 	public MessengerPlatformCallbackHandler(@Value("${messenger4j.appSecret}") final String appSecret,
 			@Value("${messenger4j.verifyToken}") final String verifyToken, final MessengerSendClient sendClient) {
 
-		logger.debug("Initializing MessengerReceiveClient - appSecret: {} | verifyToken: {}", appSecret, verifyToken);
+		logger.info("Initializing MessengerReceiveClient - appSecret: {} | verifyToken: {}", appSecret, verifyToken);
 		this.receiveClient = MessengerPlatform.newReceiveClientBuilder(appSecret, verifyToken)
 				.onTextMessageEvent(newTextMessageEventHandler())
 				.onAttachmentMessageEvent(newAttachmentMessageEventHandler())
@@ -103,13 +103,16 @@ public class MessengerPlatformCallbackHandler {
 	 * The passed verification token (as query parameter) must match the
 	 * configured verification token. In case this is true, the passed challenge
 	 * string must be returned by this endpoint.
+	 * 
+	 * @param challenge
+	 *            any string that verify endpoint
 	 */
 	@RequestMapping(method = RequestMethod.GET)
 	public ResponseEntity<String> verifyWebhook(@RequestParam(MODE_REQUEST_PARAM_NAME) final String mode,
 			@RequestParam(VERIFY_TOKEN_REQUEST_PARAM_NAME) final String verifyToken,
 			@RequestParam(CHALLENGE_REQUEST_PARAM_NAME) final String challenge) {
 
-		logger.debug("Received Webhook verification request - mode: {} | verifyToken: {} | challenge: {}", mode,
+		logger.info("Received Webhook verification request - mode: {} | verifyToken: {} | challenge: {}", mode,
 				verifyToken, challenge);
 		try {
 			return ResponseEntity.ok(this.receiveClient.verifyWebhook(mode, verifyToken, challenge));
@@ -127,10 +130,10 @@ public class MessengerPlatformCallbackHandler {
 	public ResponseEntity<Void> handleCallback(@RequestBody final String payload,
 			@RequestHeader(SIGNATURE_HEADER_NAME) final String signature) {
 
-		logger.debug("Received Messenger Platform callback - payload: {} | signature: {}", payload, signature);
+		logger.info("Received Messenger Platform callback - payload: {} | signature: {}", payload, signature);
 		try {
 			this.receiveClient.processCallbackPayload(payload, signature);
-			logger.debug("Processed callback payload successfully");
+			logger.info("Processed callback payload successfully");
 			return ResponseEntity.status(HttpStatus.OK).build();
 		} catch (MessengerVerificationException e) {
 			logger.warn("Processing of callback payload failed: {}", e.getMessage());
@@ -140,7 +143,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private TextMessageEventHandler newTextMessageEventHandler() {
 		return event -> {
-			logger.debug("Received TextMessageEvent: {}", event);
+			logger.info("Received TextMessageEvent: {}", event);
 
 			final String messageId = event.getMid();
 			final String messageText = event.getText();
@@ -151,7 +154,11 @@ public class MessengerPlatformCallbackHandler {
 					timestamp);
 
 			try {
-				switch (messageText.toLowerCase()) {
+				switch (messageText.toLowerCase().trim()) {
+				case "help":
+					sendHelpMessage(senderId);
+					break;
+
 				case "menu":
 					sendImageMessage(senderId);
 					break;
@@ -177,7 +184,7 @@ public class MessengerPlatformCallbackHandler {
 					break;
 
 				case "order":
-					sendButtonMessage(senderId);
+					sendQuickReply(senderId);
 					break;
 
 				case "template":
@@ -247,6 +254,20 @@ public class MessengerPlatformCallbackHandler {
 		this.sendClient.sendTemplate(recipientId, buttonTemplate);
 	}
 
+	/**
+	 * @author Kesho
+	 * 
+	 *         postback button for postback calls with chosen command
+	 */
+	private void sendHelpMessage(String recipientId) throws MessengerApiException, MessengerIOException {
+		final List<Button> buttons = Button.newListBuilder().addPostbackButton("Help", "DEVELOPER_DEFINED_PAYLOAD")
+				.toList().addPostbackButton("Order", "DEVELOPER_DEFINED_PAYLOAD").toList()
+				.addCallButton("Contact us", "+020109065701").toList().build();
+
+		final ButtonTemplate buttonTemplate = ButtonTemplate.newBuilder("Tap a button", buttons).build();
+		this.sendClient.sendTemplate(recipientId, buttonTemplate);
+	}
+
 	private void sendGenericMessage(String recipientId) throws MessengerApiException, MessengerIOException {
 		final List<Button> riftButtons = Button.newListBuilder()
 				.addUrlButton("Open Web URL", "https://www.oculus.com/en-us/rift/").toList()
@@ -287,6 +308,7 @@ public class MessengerPlatformCallbackHandler {
 				.addTextQuickReply("Checken", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_CHECKEN").toList()
 				.addTextQuickReply("Beef", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_BEEF").toList()
 				.addTextQuickReply("Fish", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_FISH").toList()
+				.addTextQuickReply("Menue", "DEVELOPER_DEFINED_PAYLOAD_FOR_PICKING_FISH").toList()
 				.addLocationQuickReply().toList().build();
 
 		this.sendClient.sendTextMessage(recipientId, "What are you in mood for ??", quickReplies);
@@ -317,7 +339,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private AttachmentMessageEventHandler newAttachmentMessageEventHandler() {
 		return event -> {
-			logger.debug("Received AttachmentMessageEvent: {}", event);
+			logger.info("Received AttachmentMessageEvent: {}", event);
 
 			final String messageId = event.getMid();
 			final List<Attachment> attachments = event.getAttachments();
@@ -348,7 +370,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private QuickReplyMessageEventHandler newQuickReplyMessageEventHandler() {
 		return event -> {
-			logger.debug("Received QuickReplyMessageEvent: {}", event);
+			logger.info("Received QuickReplyMessageEvent: {}", event);
 
 			final String senderId = event.getSender().getId();
 			final String messageId = event.getMid();
@@ -362,7 +384,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private PostbackEventHandler newPostbackEventHandler() {
 		return event -> {
-			logger.debug("Received PostbackEvent: {}", event);
+			logger.info("Received PostbackEvent: {}", event);
 
 			final String senderId = event.getSender().getId();
 			final String recipientId = event.getRecipient().getId();
@@ -378,7 +400,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private AccountLinkingEventHandler newAccountLinkingEventHandler() {
 		return event -> {
-			logger.debug("Received AccountLinkingEvent: {}", event);
+			logger.info("Received AccountLinkingEvent: {}", event);
 
 			final String senderId = event.getSender().getId();
 			final AccountLinkingStatus accountLinkingStatus = event.getStatus();
@@ -391,7 +413,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private OptInEventHandler newOptInEventHandler() {
 		return event -> {
-			logger.debug("Received OptInEvent: {}", event);
+			logger.info("Received OptInEvent: {}", event);
 
 			final String senderId = event.getSender().getId();
 			final String recipientId = event.getRecipient().getId();
@@ -407,7 +429,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private EchoMessageEventHandler newEchoMessageEventHandler() {
 		return event -> {
-			logger.debug("Received EchoMessageEvent: {}", event);
+			logger.info("Received EchoMessageEvent: {}", event);
 
 			final String messageId = event.getMid();
 			final String recipientId = event.getRecipient().getId();
@@ -421,7 +443,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private MessageDeliveredEventHandler newMessageDeliveredEventHandler() {
 		return event -> {
-			logger.debug("Received MessageDeliveredEvent: {}", event);
+			logger.info("Received MessageDeliveredEvent: {}", event);
 
 			final List<String> messageIds = event.getMids();
 			final Date watermark = event.getWatermark();
@@ -439,7 +461,7 @@ public class MessengerPlatformCallbackHandler {
 
 	private MessageReadEventHandler newMessageReadEventHandler() {
 		return event -> {
-			logger.debug("Received MessageReadEvent: {}", event);
+			logger.info("Received MessageReadEvent: {}", event);
 
 			final Date watermark = event.getWatermark();
 			final String senderId = event.getSender().getId();
@@ -456,7 +478,7 @@ public class MessengerPlatformCallbackHandler {
 	 */
 	private FallbackEventHandler newFallbackEventHandler() {
 		return event -> {
-			logger.debug("Received FallbackEvent: {}", event);
+			logger.info("Received FallbackEvent: {}", event);
 
 			final String senderId = event.getSender().getId();
 			logger.info("Received unsupported message from user '{}'", senderId);
@@ -469,18 +491,7 @@ public class MessengerPlatformCallbackHandler {
 			final NotificationType notificationType = NotificationType.REGULAR;
 			final String metadata = "DEVELOPER_DEFINED_METADATA";
 
-			String help = "You can use of the following: order - template - check receipt - quick help - read receipt - menu";
-			String sent = "";
-
-			switch (text) {
-			case "help":
-				sent = help;
-				break;
-			default:
-				sent = "Please use the command 'help' to get the right commands";
-			}
-
-			this.sendClient.sendTextMessage(recipient, notificationType, sent, metadata);
+			this.sendClient.sendTextMessage(recipient, notificationType, text, metadata);
 		} catch (MessengerApiException | MessengerIOException e) {
 			handleSendException(e);
 		}
